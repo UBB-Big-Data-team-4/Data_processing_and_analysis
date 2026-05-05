@@ -7,7 +7,7 @@ if __name__ == "__main__":
 
     factory = ModelFactory(model_size='n')
     results = factory.fine_tune(
-        collection_names=[f"day{i:02d}" for i in range(1,21)],
+        collection_names=[f"day{i:02d}" for i in range(1, 21)],
         device="mps"
     )
 

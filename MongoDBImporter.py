@@ -51,3 +51,6 @@ class MongoDBImporter:
     def clearCollection(self, collectionName):
         """Drop collection if it exists, ensuring fresh start for imports."""
         self.db[collectionName].drop()
+
+    def saveImage(self, img, timestamp):
+        pass
