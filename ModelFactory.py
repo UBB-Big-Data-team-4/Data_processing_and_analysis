@@ -3,7 +3,7 @@ import shutil
 import json
 from pathlib import Path
 from ultralytics import YOLO
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 import os
 import base64
@@ -146,3 +146,8 @@ class ModelFactory:
         if self.spark:
             self.spark.stop()
         self.cleanup_training_data()
+
+    def save_model(self, path):
+        if self.model is None:
+            raise ValueError("Model not loaded or trained.")
+        self.model.save(path)

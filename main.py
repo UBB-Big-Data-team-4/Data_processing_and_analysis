@@ -1,4 +1,3 @@
-from DataImporter import EdinburghDataImporter
 from ModelFactory import ModelFactory
 
 if __name__ == "__main__":
@@ -8,10 +7,12 @@ if __name__ == "__main__":
     factory = ModelFactory(model_size='n')
     results = factory.fine_tune(
         collection_names=[f"day{i:02d}" for i in range(1, 21)],
-        device="mps"
+        device="mps",
+        epochs=10,
+        batch_size=128
     )
 
     print("Fine-tuning complete!", flush=True)
     print("Results:", results)
 
-    factory.save_model("test_model_v1")
+    factory.save_model("models/test_model_v1")
