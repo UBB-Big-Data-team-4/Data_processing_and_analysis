@@ -43,9 +43,6 @@ class ModelFactory:
             .getOrCreate()
 
     def load_data_from_mongodb(self, collection_names):
-        """
-        Stream data to a local staging file to bypass Py4J memory bottlenecks.
-        """
         print(f"Staging data from MongoDB: {collection_names}", flush=True)
         self.mongo_temp_dir.mkdir(parents=True, exist_ok=True)
         temp_file_path = self.mongo_temp_dir / "export.jsonl"
@@ -83,6 +80,7 @@ class ModelFactory:
         self.dataset_path.mkdir(parents=True, exist_ok=True)
 
         df_spark = self.load_data_from_mongodb(collection_names)
+        df_spark = self._balance_dataset(df_spark)
         train_df, val_df = df_spark.randomSplit([0.8, 0.2], seed=42)
 
         def save_partition(split_name, base_dir):
@@ -151,3 +149,32 @@ class ModelFactory:
         if self.model is None:
             raise ValueError("Model not loaded or trained.")
         self.model.save(path)
+
+    def _balance_dataset(self, df, max_ratio=3.0):
+        """
+        Downsamples majority classes, allowing them to be at most
+        `max_ratio` times larger than the smallest class.
+        """
+        print("Calculating class distribution for balancing...", flush=True)
+
+        class_counts = df.groupBy("people").count().collect()
+        if not class_counts:
+            return df
+
+        counts_dict = {row['people']: row['count'] for row in class_counts}
+        print(f"Original dataset distribution: {counts_dict}", flush=True)
+
+        min_count = min(counts_dict.values())
+        max_allowed = int(min_count * max_ratio)
+        print(f"Smallest class has {min_count} images. Capping other classes at {max_allowed} images.", flush=True)
+
+        fractions = {}
+        for label, count in counts_dict.items():
+            if count <= max_allowed:
+                fractions[label] = 1.0
+            else:
+                fractions[label] = float(max_allowed) / count
+
+        balanced_df = df.stat.sampleBy("people", fractions, seed=42)
+
+        return balanced_df
