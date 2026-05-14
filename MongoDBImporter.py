@@ -49,7 +49,7 @@ class MongoDBImporter:
         collection.insert_many(newCollection)
 
     def clearCollection(self, collectionName):
-        """Drop collection if it exists, ensuring fresh start for imports."""
+        print(f"Clearing collection {collectionName}", flush=True)
         self.db[collectionName].drop()
 
     def saveImage(self, img, timestamp):
