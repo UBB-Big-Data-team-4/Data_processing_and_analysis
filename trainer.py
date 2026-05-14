@@ -6,7 +6,7 @@ results = factory.fine_tune(
     device="mps",
     epochs=10,
     batch_size=16,
-    limit=25000
+    limit=10000
 )
 
 print("Fine-tuning complete!", flush=True)

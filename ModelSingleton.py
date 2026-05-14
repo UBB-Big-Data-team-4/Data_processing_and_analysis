@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any, cast
 import shutil
 
-import numpy as np
 from ultralytics import YOLO
 
 
@@ -73,62 +72,17 @@ class ModelSingleton:
     def predict(self, frame) -> int:
         model = self.model
         if model is None:
-            return 0
+            return -1
+
         model = cast(Any, model)
 
         try:
-            results = model(frame)
-            probs = None
+            results = model.predict(frame, classes=[0], verbose=False)
 
-            if hasattr(results, "probs"):
-                probs = results.probs
-            elif len(results) > 0 and hasattr(results[0], "probs"):
-                probs = results[0].probs
+            if len(results) > 0 and hasattr(results[0], "boxes"):
+                return len(results[0].boxes)
 
-            if probs is not None:
-                if hasattr(probs, 'top5') and hasattr(probs, 'top5conf'):
-                    top_classes = [model.names[i] for i in probs.top5[:3]]
-                    top_confs = [round(float(c), 2) for c in probs.top5conf[:3]]
-                    print(f"Top 3 guesses: {list(zip(top_classes, top_confs))}", flush=True)
-                class_index = self._extract_class_index(probs)
-                return self._resolve_label(class_index)
-
-            return self._resolve_label(0)
+            return 0
         except Exception as e:
             print(f"Model prediction failed: {e}", flush=True)
-            return 0
-
-    def _extract_class_index(self, probs) -> int:
-        if hasattr(probs, 'top1') and probs.top1 is not None:
-            return int(probs.top1)
-
-        try:
-            if hasattr(probs, 'data'):
-                arr = probs.data.cpu().numpy()
-            else:
-                arr = np.array(probs)
-
-            if arr.ndim == 1:
-                return int(arr.argmax())
-            if arr.ndim == 2:
-                return int(arr[0].argmax())
-        except Exception as e:
-            print(f"Error parsing probabilities: {e}", flush=True)
-
-        return 0
-
-    def _resolve_label(self, class_index: int) -> int:
-        class_index = max(0, int(class_index))
-        names = getattr(self.model, "names", None)
-
-        if isinstance(names, dict):
-            label = names.get(class_index, class_index)
-        elif isinstance(names, (list, tuple)) and class_index < len(names):
-            label = names[class_index]
-        else:
-            label = class_index
-
-        try:
-            return max(0, min(99, int(str(label))))
-        except (TypeError, ValueError):
-            return max(0, min(99, class_index))
+            return -1
