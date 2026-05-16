@@ -6,7 +6,7 @@ import DataProcessingUpdated as dp
 
 output_file = "mock_data.csv"
 
-# create file if not exists
+# create file if it doesn't exist
 if not os.path.exists(output_file):
     with open(output_file, "w", newline="") as f:
         writer = csv.writer(f)
