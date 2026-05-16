@@ -10,11 +10,11 @@ def getProcessedData():
     global current_time
     global current_people
 
-    # simulate realistic office movement
+    # simulate office movement
     change = random.choice([-2, -1, 0, 1, 2])
     current_people += change
 
-    # keep values realistic
+    # no of people
     current_people = max(0, min(current_people, 25))
 
     # advance time (simulate stream)
